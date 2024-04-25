@@ -1,68 +1,51 @@
 module.exports = {
-  root: true,
   env: {
-    es6: true,
+    es2021: true,
     node: true,
   },
-  extends: [
-    'eslint:recommended',
-    'plugin:import/errors',
-    'plugin:import/warnings',
-    'plugin:import/typescript',
-    'google',
-    'plugin:@typescript-eslint/recommended',
-  ],
-  parser: '@typescript-eslint/parser',
+  extends: ["standard", "plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
+  parser: "@typescript-eslint/parser",
   parserOptions: {
-    project: ['tsconfig.json', 'tsconfig.dev.json'],
-    sourceType: 'module',
+    ecmaVersion: "latest",
+    sourceType: "module",
   },
   ignorePatterns: [
-    '/lib/**/*', // Ignore built files.
+    "/lib/**/*", // Ignore built files.
   ],
-  plugins: ['@typescript-eslint', 'import'],
+  plugins: ["@typescript-eslint", "eslint-plugin-import-helpers"],
   rules: {
-    'import/no-unresolved': 0,
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-    'object-curly-spacing': ['error', 'always'],
-    'max-len': ['warn', 120],
-    'no-plus-plus': 'off',
-    'no-underscore-dangle': 'off',
-    'max-classes-per-file': 'warn',
-    'consistent-return': 'warn',
-    'camelcase': 'off',
-    'arrow-parens': 'off',
-    'no-nested-ternary': 'off',
-    'object-curly-newline': [
-      'error',
+    "prettier/prettier": [
+      "error",
       {
-        ObjectExpression: {
-          minProperties: 6,
-          multiline: true,
-          consistent: true,
-        },
-        ObjectPattern: { minProperties: 6 },
-        ImportDeclaration: {
-          minProperties: 6,
-          multiline: true,
-          consistent: true,
-        },
-        ExportDeclaration: {
-          minProperties: 6,
-          multiline: true,
-          consistent: true,
-        },
+        printWidth: 80,
+        tabWidth: 2,
+        singleQuote: false,
+        trailingComma: "all",
+        arrowParens: "always",
+        semi: true,
       },
     ],
-    'import/prefer-default-export': 'off',
-    'import/extensions': [
-      'error',
-      'ignorePackages',
+    "import-helpers/order-imports": [
+      "warn",
       {
-        js: 'never',
-        ts: 'never',
-        tsx: 'never',
+        newlinesBetween: "always",
+        groups: ["module", "/^@/", "/^test/", ["parent", "sibling", "index"]],
+        alphabetize: { order: "asc", ignoreCase: true },
       },
     ],
+
+    camelcase: "off",
+    "no-useless-constructor": "off",
+    "no-new": "off",
+    "dot-notation": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+    "no-case-declarations": "off",
+    "@typescript-eslint/no-empty-function": "off",
+    "no-use-before-define": "off",
+  },
+  settings: {
+    "import/parsers": {
+      [require.resolve("@typescript-eslint/parser")]: [".ts", ".tsx", ".d.ts"],
+    },
   },
 };

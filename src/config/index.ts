@@ -1,5 +1,5 @@
-import * as express from 'express';
-import { onRequest as firebaseOnRequest, HttpsOptions, Request } from 'firebase-functions/v2/https';
+import * as express from "express";
+import { onRequest as firebaseOnRequest, HttpsOptions, Request } from "firebase-functions/v2/https";
 
 export const defaultConfig: HttpsOptions = {
   cors: true,
