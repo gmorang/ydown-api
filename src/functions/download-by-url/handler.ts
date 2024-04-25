@@ -15,9 +15,9 @@ const downloadByUrl = onRequest(async (request, response) => {
 
     const url = request.body.url;
 
-    await convertMusic(url);
+    const downloadAndGetTitle = await convertMusic(url);
 
-    const upload = uploadConvertedMusic();
+    const upload = uploadConvertedMusic(downloadAndGetTitle);
 
     response.status(200).send({ upload });
   } catch (e) {
