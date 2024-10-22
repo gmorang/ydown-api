@@ -1,45 +1,55 @@
-import ytdl from "@distube/ytdl-core";
+import ytdl from "ytdl-core";
+import youtubedl from "youtube-dl-exec";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffmpeg from "fluent-ffmpeg";
 import { logger } from "firebase-functions/v1";
+import path from "path";
 
-const convertMusic = async (url: string): Promise<String> => {
+const convertMusic = async (url: string): Promise<any> => {
   ffmpeg.setFfmpegPath(ffmpegInstaller.path);
-  try {
-    const isValid = ytdl.validateURL(url);
 
-    if (!isValid) throw new Error("Invalid URL");
+  const info = await ytdl.getInfo(url);
+  const musicName = info.videoDetails.title.replace(/\//g, '|');
 
-    const info = await ytdl.getInfo(url);
+  async function convertWebMToMP3(inputFilePath: string) {
+    const outputFilePath = `${musicName}.mp3`;
 
-    logger.info(`Title: ${info.videoDetails.title}`);
-
-    let stream = ytdl(url, {
-      quality: `highestaudio`,
-    });
-
-    let start = Date.now();
-
-    const file = await new Promise((resolve, reject) => {
-      ffmpeg(stream)
-        .audioBitrate(320)
-        .save(`${info.videoDetails.title}.mp3`)
-        .on("error", (e) => {
-          reject(e);
-        })
-        .on("progress", (p) => {
-          logger.info(`Processing: ${p.targetSize} KB converted`);
-        })
+    return new Promise((resolve, reject) => {
+      ffmpeg(inputFilePath)
+        .audioBitrate(128)
+        .toFormat("mp3")
         .on("end", () => {
-          console.log(`\ndone, thanks - ${(Date.now() - start) / 1000}s`);
-          resolve(info.videoDetails.title);
-        });
+          logger.info("Conversion finished successfully");
+          resolve(outputFilePath);
+        })
+        .on("error", (err) => {
+          logger.error("Error during conversion:", err);
+          reject(err);
+        })
+        .save(outputFilePath);
     });
+  }
 
-    return file as string;
-  } catch (e) {
-    logger.error(e);
-    throw e;
+  const webmFilePath = path.join(process.cwd(), "tmp", `${musicName}.webm`);
+
+  try {
+    // Step 1: Download the audio as WebM
+    const output = await youtubedl(url, {
+      extractAudio: true,
+      audioFormat: "mp3",
+      preferFfmpeg: true,
+      output: webmFilePath,
+    });
+    logger.log("Download completed:", output);
+
+    // Step 2: Convert WebM to MP3
+    const mp3Path = await convertWebMToMP3(webmFilePath);
+    logger.log("MP3 saved to:", mp3Path);
+
+    return mp3Path;
+  } catch (err) {
+    logger.error("Error:", err);
+    throw err;
   }
 };
 

@@ -1,7 +1,11 @@
 import * as logger from "firebase-functions/logger";
 import { onRequest } from "../../config";
 import convertMusic from "./services/convert-music";
-import uploadConvertedMusic from "./services/upload-converted-music";
+
+
+import fs from 'fs/promises';
+import path from 'path';
+// import uploadConvertedMusic from "./services/upload-converted-music";
 
 const downloadByUrl = onRequest(async (request, response) => {
   try {
@@ -9,17 +13,22 @@ const downloadByUrl = onRequest(async (request, response) => {
       response.status(403).send("Only POST requests are accepted");
     }
 
-    if (!request.body.url) {
+    if (!request.body.urls) {
       response.status(400).send("URL is required");
     }
 
-    const url = request.body.url;
+    const urls = request.body.urls;
 
-    const downloadAndGetTitle = await convertMusic(url);
+    await Promise.all(urls.map(async (url: string) => {
+      return await convertMusic(url);
+    }));
 
-    const upload = uploadConvertedMusic(downloadAndGetTitle);
+    const tmpDir = path.join(process.cwd(), 'tmp');
 
-    response.status(200).send({ upload });
+    await fs.rm(tmpDir, { recursive: true, force: true });
+    logger.info('Temporary directory cleaned up successfully');
+
+    response.status(200).send({ ok: true });
   } catch (e) {
     logger.error(e);
     response.status(500).send(e);
